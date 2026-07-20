@@ -1,0 +1,9 @@
+#pragma once
+#include "snes9x.h"
+#include "cpuexec.h"
+#include "memmap.h"
+#include "ppu.h"
+#include "gfx.h"
+#include "apu.h"
+#include "dsp.h"
+#include "display.h"
