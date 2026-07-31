@@ -31,6 +31,19 @@ size_t romSize = 0;
 float currentFPS = 0;
 uint16_t currentPixel = 0;
 
+const uint32_t SNES_B_MASK      = 1u << 15;
+const uint32_t SNES_Y_MASK      = 1u << 14;
+const uint32_t SNES_SELECT_MASK = 1u << 13;
+const uint32_t SNES_START_MASK  = 1u << 12;
+const uint32_t SNES_UP_MASK     = 1u << 11;
+const uint32_t SNES_DOWN_MASK   = 1u << 10;
+const uint32_t SNES_LEFT_MASK   = 1u << 9;
+const uint32_t SNES_RIGHT_MASK  = 1u << 8;
+const uint32_t SNES_A_MASK      = 1u << 7;
+const uint32_t SNES_X_MASK      = 1u << 6;
+const uint32_t SNES_TL_MASK     = 1u << 4;
+const uint32_t SNES_TR_MASK     = 1u << 3;
+
 
 // ================= DISPLAY / JPEG =================
 
@@ -147,9 +160,60 @@ margin-top:10px;
 Loading...
 </p>
 
+<p>
+Controls: Arrow keys = D-pad · Z = B · X = A · A = Y · S = X ·
+Q = L · W = R · Enter = Start · Shift = Select
+</p>
+
 <script>
 
 const img = document.getElementById("screen");
+const keyMask = {
+  ArrowUp: 2048,
+  ArrowDown: 1024,
+  ArrowLeft: 512,
+  ArrowRight: 256,
+  KeyZ: 32768,
+  KeyX: 128,
+  KeyA: 16384,
+  KeyS: 64,
+  KeyQ: 16,
+  KeyW: 8,
+  Enter: 4096,
+  ShiftLeft: 8192,
+  ShiftRight: 8192
+};
+const pressed = new Set();
+
+function sendInput() {
+  let mask = 0;
+  for (const code of pressed) mask |= keyMask[code];
+  fetch('/input?mask=' + mask, { method: 'POST', cache: 'no-store' })
+    .catch(() => {});
+}
+
+window.addEventListener('keydown', event => {
+  if (!(event.code in keyMask)) return;
+  event.preventDefault();
+  if (!pressed.has(event.code)) {
+    pressed.add(event.code);
+    sendInput();
+  }
+});
+
+window.addEventListener('keyup', event => {
+  if (!(event.code in keyMask)) return;
+  event.preventDefault();
+  pressed.delete(event.code);
+  sendInput();
+});
+
+window.addEventListener('blur', () => {
+  if (pressed.size) {
+    pressed.clear();
+    sendInput();
+  }
+});
 
 setInterval(()=>{
 
@@ -204,6 +268,20 @@ void handleStatus()
 
 }
 
+
+void handleInput()
+{
+    if(!server.hasArg("mask"))
+    {
+        server.send(400, "text/plain", "Missing mask");
+        return;
+    }
+
+    const uint32_t mask = (uint32_t) server.arg("mask").toInt();
+    snesEngineSetButtons(mask);
+
+    server.send(204, "text/plain", "");
+}
 
 
 void handleFrame()
@@ -555,6 +633,7 @@ Serial.println(WiFi.localIP());
 server.on("/", handleRoot);
 server.on("/status", handleStatus);
 server.on("/frame", handleFrame);
+server.on("/input", HTTP_POST, handleInput);
 
 server.begin();
 
