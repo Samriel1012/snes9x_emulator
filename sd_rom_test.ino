@@ -413,6 +413,17 @@ void setup()
     // MALLOC_CAP_SPIRAM. heap_caps_malloc_extmem_enable(0) changes that
     // default so ALL malloc()/calloc() calls prefer PSRAM first. This must
     // be called before any of those core allocations happen.
+    if (!psramFound())
+    {
+        Serial.println("PSRAM was not detected; this emulator cannot initialize graphics.");
+        while (true) delay(1000);
+    }
+
+    Serial.printf(
+        "PSRAM free at startup: %u bytes\n",
+        (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM)
+    );
+
     heap_caps_malloc_extmem_enable(0);
 
     Serial.println("About to mount SD");
