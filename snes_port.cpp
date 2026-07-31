@@ -100,6 +100,16 @@ bool S9xInitDisplay()
 {
   Serial.println("Initializing display buffers");
 
+  if (!psramFound())
+  {
+    Serial.println("PSRAM is required for the Snes9x display buffers");
+    return false;
+  }
+
+  Serial.printf(
+    "PSRAM free before display allocation: %u bytes\n",
+    (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM)
+  );
 
   size_t framebufferSize =
   SNES_WIDTH *
@@ -173,7 +183,11 @@ bool S9xInitDisplay()
     !GFX.ZBuffer ||
     !GFX.SubZBuffer)
   {
-    Serial.println("Extra display allocation failed");
+    Serial.printf(
+      "Extra display allocation failed; PSRAM free: %u bytes\n",
+      (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM)
+    );
+    S9xDeinitDisplay();
     return false;
   }
 
@@ -229,6 +243,10 @@ void S9xDeinitDisplay()
     heap_caps_free(snesFramebuffer);
     snesFramebuffer = nullptr;
   }
+
+  GFX.Screen = nullptr;
+  GFX.Pitch = 0;
+  GFX.Pitch2 = 0;
 
 
   if(GFX.SubScreen)
