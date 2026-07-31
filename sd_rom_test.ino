@@ -41,8 +41,8 @@ const uint32_t SNES_LEFT_MASK   = 1u << 9;
 const uint32_t SNES_RIGHT_MASK  = 1u << 8;
 const uint32_t SNES_A_MASK      = 1u << 7;
 const uint32_t SNES_X_MASK      = 1u << 6;
-const uint32_t SNES_TL_MASK     = 1u << 4;
-const uint32_t SNES_TR_MASK     = 1u << 3;
+const uint32_t SNES_TL_MASK     = 1u << 5;
+const uint32_t SNES_TR_MASK     = 1u << 4;
 
 
 // ================= DISPLAY / JPEG =================
@@ -177,8 +177,8 @@ const keyMask = {
   KeyX: 128,
   KeyA: 16384,
   KeyS: 64,
-  KeyQ: 16,
-  KeyW: 8,
+  KeyQ: 32,
+  KeyW: 16,
   Enter: 4096,
   ShiftLeft: 8192,
   ShiftRight: 8192
