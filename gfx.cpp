@@ -1,4 +1,5 @@
 #include "snes9x_arduino.h"
+#include <Arduino.h>
 /* This file is part of Snes9x. See LICENSE file. */
 
 #include "snes9x.h"
@@ -161,7 +162,13 @@ bool S9xInitGFX(void)
 {
    LocalState = (decltype(LocalState)) calloc(1, sizeof(*LocalState));
    if (!LocalState)
+   {
+      Serial.printf(
+         "S9xInitGFX: LocalState allocation failed; PSRAM free: %u bytes\n",
+         (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM)
+      );
       return false;
+   }
 
    GFX.OBJLines = LocalState->OBJLines;
    GFX.RealPitch = GFX.Pitch2 = GFX.Pitch;
@@ -184,7 +191,15 @@ bool S9xInitGFX(void)
 
 #ifndef NO_ZERO_LUT
    if (!(GFX.ZERO = (uint16_t*) malloc(sizeof(uint16_t) * 0x10000)))
+   {
+      Serial.printf(
+         "S9xInitGFX: ZERO lookup-table allocation failed; PSRAM free: %u bytes\n",
+         (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM)
+      );
+      free(LocalState);
+      LocalState = NULL;
       return false;
+   }
 
    /* Build a lookup table that if the top bit of the color value is zero
     * then the value is zero, otherwise its just the value. */
